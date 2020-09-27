@@ -166,11 +166,14 @@ namespace SpriteLightRendering
 #if UNITY_EDITOR
                 bIsPixelPerfectCamera = PixelPerfectComponent && (Application.isPlaying || PixelPerfectComponent.runInEditMode) && PixelPerfectComponent.enabled;
 #else
-                bIsPixelPerfectCamera = PixelPerfectComponent &&  enabled;
+                bIsPixelPerfectCamera = PixelPerfectComponent && PixelPerfectComponent.enabled;
 #endif
                 if (bIsPixelPerfectCamera)
                 {
                     pixelRatio = PixelPerfectComponent.pixelRatio;
+
+                    //m_ClearTargetsPass.Setup(ClearFlag.All, Color.black);
+                    //EnqueuePass(m_ClearTargetsPass);
                 }
             }
 
@@ -592,7 +595,6 @@ namespace SpriteLightRendering
             if (camera)
             {
                 PixelPerfectCamera PixelPerfectComponent = camera.GetComponent<PixelPerfectCamera>();
-
 #if UNITY_EDITOR
                 bool bIsPixelPerfectCamera = PixelPerfectComponent && (Application.isPlaying || PixelPerfectComponent.runInEditMode) && PixelPerfectComponent.enabled;
 #else
@@ -603,6 +605,8 @@ namespace SpriteLightRendering
                 {
                     descriptor.width = PixelPerfectComponent.refResolutionX;
                     descriptor.height = PixelPerfectComponent.refResolutionY;
+
+                    cmd.ClearRenderTarget(false, true, Color.black);
                 }
             }
 

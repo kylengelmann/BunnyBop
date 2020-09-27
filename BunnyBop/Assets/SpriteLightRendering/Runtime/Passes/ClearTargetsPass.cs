@@ -24,7 +24,10 @@ public class ClearTargetsPass : ScriptableRenderPass
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         CommandBuffer commandBuffer = CommandBufferPool.Get(m_PassName);
+        Rect pixRect = renderingData.cameraData.camera.pixelRect;
+        //commandBuffer.SetViewport(new Rect(Vector2.zero, new Vector2(Screen.width, Screen.height)));
         commandBuffer.ClearRenderTarget((m_clearFlag & ClearFlag.Depth) != 0, (m_clearFlag & ClearFlag.Color) != 0, m_clearColor);
+        //commandBuffer.SetViewport(pixRect);
         context.ExecuteCommandBuffer(commandBuffer);
         CommandBufferPool.Release(commandBuffer);
     }

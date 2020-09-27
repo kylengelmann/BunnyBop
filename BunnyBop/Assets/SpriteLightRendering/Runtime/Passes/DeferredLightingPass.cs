@@ -77,8 +77,30 @@ namespace SpriteLightRendering
                 context.ExecuteCommandBuffer(commandBuffer);
                 commandBuffer.Clear();
 
+                Camera camera = renderingData.cameraData.camera;
+                PixelPerfectCamera pixelPerfectCamera = null;
+                bool bIsPerfectPixel = camera.TryGetComponent(out pixelPerfectCamera) && pixelPerfectCamera.enabled;
+
+#if UNITY_EDITOR
+                if (bIsPerfectPixel)
+                {
+                    bIsPerfectPixel &= (Application.isPlaying || pixelPerfectCamera.runInEditMode);
+                }
+#endif
+
+                if (bIsPerfectPixel)
+                {
+                    //commandBuffer.SetViewport(new Rect(Vector2.zero, new Vector2(pixelPerfectCamera.refResolutionX, pixelPerfectCamera.refResolutionY)));
+                    //context.ExecuteCommandBuffer(commandBuffer);
+                }
+
                 DrawDirectionalLights(context, commandBuffer, renderingData);
                 DrawPointLights(context, commandBuffer, renderingData);
+
+                if (bIsPerfectPixel)
+                {
+                    //commandBuffer.SetViewport(camera.pixelRect);
+                }
             }
             context.ExecuteCommandBuffer(commandBuffer);
             CommandBufferPool.Release(commandBuffer);
