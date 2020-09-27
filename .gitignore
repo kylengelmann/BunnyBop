@@ -4,8 +4,8 @@
 [Tt]emp/
 [Oo]bj/
 [Bb]uild
-/[Bb]uilds/
-/[Ll]ibrary/
+BunnyBop/[Bb]uilds/
+BunnyBop/[Ll]ibrary/
 sysinfo.txt
 *.stackdump
 /Assets/AssetStoreTools*
