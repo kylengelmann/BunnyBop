@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.IO;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using Object = System.Object;
+using Object = UnityEngine.Object;
 
 [ExecuteInEditMode]
 public class Tilemap3DGeneratorComponent : MonoBehaviour
@@ -16,6 +18,8 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
 
         /** The mesh to use to represent these sprite for lighting calculations */
         public Mesh m_Mesh;
+
+        public int m_Height;
     }
 
     /** Sprite data to auto-generate a 3D representation of the tilemap */
@@ -37,7 +41,6 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
             return;
         }
 
-
         Tilemap tilemap;
         if (!TryGetComponent(out tilemap))
         {
@@ -48,6 +51,25 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
         if (m_InternalMeshParent != null)
         {
             DestroyImmediate(m_InternalMeshParent);
+        }
+
+        GridAsset LevelGridAsset =
+            AssetDatabase.LoadAssetAtPath(Path.Combine(GridAsset.s_GridAssetDirectory,
+                gameObject.scene.path + GridAsset.s_GridAssetSuffix), typeof(GridAsset)) as GridAsset;
+
+        if (!LevelGridAsset)
+        {
+            LevelGridAsset = ScriptableObject.CreateInstance<GridAsset>();
+            AssetDatabase.CreateAsset(LevelGridAsset, Path.Combine(GridAsset.s_GridAssetDirectory, gameObject.scene.name + GridAsset.s_GridAssetSuffix));
+        }
+
+        if (LevelGridAsset)
+        {
+            if (LevelGridAsset.GridCells == null)
+            {
+                LevelGridAsset.GridCells = new List<Grid.GridCellInfo>();
+            }
+            LevelGridAsset.GridCells.Clear();
         }
 
         string parentName = String.Concat(gameObject.name, "_3DGeometryParent");
@@ -74,6 +96,7 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
             {
                 bool bFoundSprite = false;
                 Mesh FoundMesh = null;
+                int FoundHeight = 0;
                 foreach (Sprite3DData sprite3DData in m_Sprite3DData)
                 {
                     foreach (Sprite sprite in sprite3DData.m_Sprites)
@@ -88,6 +111,7 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
                     if (bFoundSprite)
                     {
                         FoundMesh = sprite3DData.m_Mesh;
+                        FoundHeight = sprite3DData.m_Height;
                         break;
                     }
                 }
@@ -102,6 +126,12 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
                     if (MeshGO.TryGetComponent(out meshFilter))
                     {
                         meshFilter.mesh = FoundMesh;
+                    }
+
+                    if (LevelGridAsset)
+                    {
+                        LevelGridAsset.GridCells.Add(new Grid.GridCellInfo(new Vector2Int(tilePosition.x, tilePosition.y), FoundHeight));
+                        AssetDatabase.SaveAssets();
                     }
                 }
             }
