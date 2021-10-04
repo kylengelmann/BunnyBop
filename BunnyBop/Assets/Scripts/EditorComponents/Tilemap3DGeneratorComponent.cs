@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 using Object = UnityEngine.Object;
 
@@ -48,19 +49,26 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
             return;
         }
 
+        string parentName = String.Concat(gameObject.name, "_3DGeometryParent");
+
+        if (m_InternalMeshParent == null)
+        {
+            m_InternalMeshParent = GameObject.Find(parentName);
+        }
+
         if (m_InternalMeshParent != null)
         {
             DestroyImmediate(m_InternalMeshParent);
         }
 
         GridAsset LevelGridAsset =
-            AssetDatabase.LoadAssetAtPath(Path.Combine(GridAsset.s_GridAssetDirectory,
-                gameObject.scene.path + GridAsset.s_GridAssetSuffix), typeof(GridAsset)) as GridAsset;
+            AssetDatabase.LoadAssetAtPath(Path.Combine(Path.GetDirectoryName(gameObject.scene.path),
+                gameObject.scene.name + GridAsset.s_GridAssetSuffix), typeof(GridAsset)) as GridAsset;
 
         if (!LevelGridAsset)
         {
             LevelGridAsset = ScriptableObject.CreateInstance<GridAsset>();
-            AssetDatabase.CreateAsset(LevelGridAsset, Path.Combine(GridAsset.s_GridAssetDirectory, gameObject.scene.name + GridAsset.s_GridAssetSuffix));
+            AssetDatabase.CreateAsset(LevelGridAsset, Path.Combine(Path.GetDirectoryName(gameObject.scene.path), gameObject.scene.name + GridAsset.s_GridAssetSuffix));
         }
 
         if (LevelGridAsset)
@@ -70,24 +78,15 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
                 LevelGridAsset.GridCells = new List<Grid.GridCellInfo>();
             }
             LevelGridAsset.GridCells.Clear();
+            EditorUtility.SetDirty(LevelGridAsset);
         }
 
-        string parentName = String.Concat(gameObject.name, "_3DGeometryParent");
         m_InternalMeshParent = new GameObject(parentName);
 
         m_InternalMeshParent.transform.position = transform.position + Vector3.back * m_MeshDistanceFromMap;
         m_InternalMeshParent.transform.SetParent(m_MeshParent);
         m_InternalMeshParent.transform.localRotation = Quaternion.identity;
 
-        Matrix4x4 tilemapToMeshCoords = Matrix4x4.identity;
-        tilemapToMeshCoords.m00 = .5f;
-        tilemapToMeshCoords.m01 = -.5f;
-
-        tilemapToMeshCoords.m11 = 0f;
-
-        tilemapToMeshCoords.m20 = .5f;
-        tilemapToMeshCoords.m21 = .5f;
-        tilemapToMeshCoords.m23 = .5f;
 
         foreach (Vector3Int tilePosition in tilemap.cellBounds.allPositionsWithin)
         {
@@ -118,23 +117,28 @@ public class Tilemap3DGeneratorComponent : MonoBehaviour
 
                 if (bFoundSprite)
                 {
-                    Vector3 meshPos = tilemapToMeshCoords * new Vector4(tilePosition.x, tilePosition.y, tilePosition.z, 1f);
-                    GameObject MeshGO = Instantiate(m_3DObjectPrefab, m_InternalMeshParent.transform);
-                    MeshGO.transform.localPosition = meshPos;
-
-                    MeshFilter meshFilter;
-                    if (MeshGO.TryGetComponent(out meshFilter))
+                    Vector3 meshPos = Grid.TransformTileToLocal3D(new Vector2Int(tilePosition.x, tilePosition.y));
+                    GameObject MeshGO = (GameObject)PrefabUtility.InstantiatePrefab(m_3DObjectPrefab, m_InternalMeshParent.transform);
+                    if (MeshGO)
                     {
-                        meshFilter.mesh = FoundMesh;
-                    }
+                        MeshGO.name += tilePosition.ToString();
+                        MeshGO.transform.localPosition = meshPos;
 
-                    if (LevelGridAsset)
-                    {
-                        LevelGridAsset.GridCells.Add(new Grid.GridCellInfo(new Vector2Int(tilePosition.x, tilePosition.y), FoundHeight));
-                        AssetDatabase.SaveAssets();
+                        MeshFilter meshFilter;
+                        if (MeshGO.TryGetComponent(out meshFilter))
+                        {
+                            meshFilter.mesh = FoundMesh;
+                        }
+
+                        if (LevelGridAsset)
+                        {
+                            LevelGridAsset.GridCells.Add(
+                                new Grid.GridCellInfo(new Vector2Int(tilePosition.x, tilePosition.y), FoundHeight));
+                        }
                     }
                 }
             }
         }
+        AssetDatabase.SaveAssets();
     }
 }

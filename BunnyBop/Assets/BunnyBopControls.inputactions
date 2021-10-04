@@ -1,0 +1,33 @@
+{
+    "name": "BunnyBopControls",
+    "maps": [
+        {
+            "name": "Gameplay",
+            "id": "14146e7b-b168-4664-96b5-dd6d87a01bb2",
+            "actions": [
+                {
+                    "name": "Select",
+                    "type": "Button",
+                    "id": "ebdd27cf-e2c0-484d-a24c-c1cfc1e2707a",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "1a45fa6e-4823-4329-92b8-1c1f39307f07",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

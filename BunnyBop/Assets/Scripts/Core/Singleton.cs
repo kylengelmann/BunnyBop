@@ -18,6 +18,7 @@ public class Singleton<T> : MonoBehaviour where T : Singleton<T>
         else
         {
             Instance = (T)this;
+            bHasInstance = true;
         }
     }
 }
